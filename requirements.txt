@@ -1,0 +1,12 @@
+google_adk
+requests
+bs4
+selenium
+pandas
+googlemaps
+google-maps-routing
+google-api-python-client
+grpcio
+grpcio-tools
+protobuf
+deprecated

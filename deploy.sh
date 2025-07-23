@@ -1,0 +1,6 @@
+gcloud run deploy driver-assistant-service \
+--source . \
+--region $GOOGLE_CLOUD_LOCATION \
+--project $GOOGLE_CLOUD_PROJECT \
+--allow-unauthenticated \
+--set-env-vars="GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION,GOOGLE_GENAI_USE_VERTEXAI=$GOOGLE_GENAI_USE_VERTEXAI,MAPS_API_KEY=$MAPS_API_KEY" \
