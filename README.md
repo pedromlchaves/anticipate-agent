@@ -1,4 +1,4 @@
-# Ride-O-Clock Agent
+# anticipate Agent
 
 This repository contains a Google ADK-based agent designed to run locally for development or be deployed to Google Cloud Run. The agent provides intelligent driver assistance and routing capabilities using Google Maps, weather, and transportation APIs.
 
