@@ -33,16 +33,16 @@ def get_daily_city_weather(city: str) -> Dict[str, any]:
 
         today_str = datetime.datetime.now().strftime("%Y-%m-%d")
         df_today = df[df["dataPrev"].str.startswith(today_str)]
-        df_today = df_today[
-            [
-                "dataPrev",
-                "tMin",
-                "tMax",
-                "tMed",
-                "probabilidadePrecipita",
-                "idIntensidadePrecipita",
-            ]
+        desired_columns = [
+            "dataPrev",
+            "tMin",
+            "tMax",
+            "tMed",
+            "probabilidadePrecipita",
+            "idIntensidadePrecipita",
         ]
+        available_columns = [col for col in desired_columns if col in df_today.columns]
+        df_today = df_today[available_columns]
 
         forecast = str(df_today.to_dict(orient="records"))
         return {
