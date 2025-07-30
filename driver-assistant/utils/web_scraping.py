@@ -105,16 +105,15 @@ def extract_events_from_html(html_content: str) -> List[Dict[str, Any]]:
     return events_data
 
 
-def get_headless_chrome_driver() -> webdriver.Chrome:
-    """
-    Get a headless Chrome driver.
+from selenium.webdriver.chrome.service import Service
 
-    Returns:
-        webdriver.Chrome: Configured Chrome driver instance.
-    """
+
+def get_headless_chrome_driver() -> webdriver.Chrome:
     chrome_options = Options()
     chrome_options.add_argument("--headless")
-    return webdriver.Chrome(options=chrome_options)
+    chrome_options.binary_location = "/usr/bin/chromium"
+    service = Service("/usr/bin/chromedriver")
+    return webdriver.Chrome(service=service, options=chrome_options)
 
 
 def scroll_and_load_content(

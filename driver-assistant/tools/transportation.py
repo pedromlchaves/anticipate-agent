@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from typing import Dict
 
 from ..config import AIRPORT_CODE_MAPPING, STATION_CODE_MAPPING
+from ..utils.web_scraping import get_headless_chrome_driver
 
 
 def get_flight_peak_hours(city: str) -> Dict[str, any]:
@@ -32,7 +33,7 @@ def get_flight_peak_hours(city: str) -> Dict[str, any]:
             + airport_code
         )
 
-        driver = webdriver.Chrome()
+        driver = get_headless_chrome_driver()
         driver.get(url)
 
         soup = BeautifulSoup(driver.page_source, features="html.parser")
@@ -56,9 +57,10 @@ def get_flight_peak_hours(city: str) -> Dict[str, any]:
         }
 
     except Exception as e:
+
         return {
             "status": "error",
-            "error_message": f"Peak hours information for '{city}' is not available.",
+            "error_message": f"Peak hours information for '{city}' is not available. The exception was {str(e)}.",
         }
 
 

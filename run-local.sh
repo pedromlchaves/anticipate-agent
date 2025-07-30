@@ -55,7 +55,7 @@ docker rm driver-assistant-local 2>/dev/null || true
 
 # Step 7: Run the container with mounted credentials
 echo -e "${GREEN}🚀 Starting Docker container with Google Cloud credentials...${NC}"
-docker run -d \
+docker run \
     --name driver-assistant-local \
     -p 8080:8080 \
     -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/application_default_credentials.json \
