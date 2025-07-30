@@ -69,7 +69,8 @@ root_agent = Agent(
         * `starTime`: the time to start the plan (HH:MM),
         * `endTime`: the time to end the plan (HH:MM),
         * `sources`: an object containing the data sources to use for the plan in boolean format (e.g., "trains", "flights", "events"),
-        * `user`: an object containing the user details, including their city 
+        * `customInstructions`: an object containing any specific instructions or preferences for the plan,
+        * `user`: an object containing the user details, including their city
 
         You have at your disposal several tools which you can use to fulfill the user's requests and planning:
 
