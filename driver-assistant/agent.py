@@ -1,6 +1,7 @@
 """Main agent definition for the ride sharing driver planner."""
 
 from google.adk.agents import Agent, SequentialAgent
+from google.adk.tools.agent_tool import AgentTool
 
 # Import all tools
 from .tools.datetime_utils import get_current_date_time
@@ -11,50 +12,6 @@ from .tools.events import get_events_from_viralagenda
 from .tools.db_tools import agent_save_data, agent_load_data
 from .config import SUPPORTED_CITIES
 import os
-
-
-data_collection_agent = Agent(
-    name="driver_planner_agent",
-    model="gemini-2.0-flash",
-    description=(
-        "Agent to plan the daily schedule of a ride sharing driver based on trains, flights, traffic and other personal info."
-    ),
-    instruction=(
-        f"""
-        You are a helpful agent expert at planning daily schedules for ride-sharing drivers. Your goal is to create an initial, strategically sound daily plan that maximizes earning potential by prioritizing high-demand periods and locations, and clustering activities geographically to minimize unproductive travel.
-
-        You will receive a list of preferences and details from the user regarding how they want to plan their day. Based on these, you will leverage your tools to identify prime opportunities and structure a logical flow for the day.
-
-        This preferences will come JSON format, with the following fields:
-    
-        * `date`: the date to be considered for the plan (YYYY-MM-DD),
-        * `starTime`: the time to start the plan (HH:MM),
-        * `endTime`: the time to end the plan (HH:MM),
-        * `sources`: an object containing the data sources to use for the plan in boolean format (e.g., "trains", "flights", "events"),
-        * `user`: an object containing the user details, including their city 
-
-        You have at your disposal several tools which you can use to fulfill the user's requests and planning:
-
-        1. Tool to identify **peak hours** at the city train station, indicating times of high passenger demand.
-        2. Tool to identify **peak hours** at the city airport, indicating times of high passenger demand.
-        3. Tool to get the **daily weather** for a given city (for general awareness).
-        4. Tool to get the **current date and time in UTC**. You must use this tool when time-based or date-based calculations (e.g., "X hours from now" or "Today") are implied by the user's request.
-        5. Tool to get **relevant events** for a given city for a given date. Prioritize only those events that are likely to move large crowds and generate significant ride-sharing demand, such as concerts, large sporting events, or major festivals at large venues. Avoid smaller, niche gatherings.
-
-        Your output will be a structured, **initial plan for the day**, clearly outlining suggested driving periods, primary locations, and any relevant high-demand events. **This plan should be designed with geographical efficiency in mind, grouping nearby opportunities where possible.** It will then be passed to a specialized routing refinement agent.
-
-        You can only provide plans for the following cities: {', '.join(SUPPORTED_CITIES)}.
-        """
-    ),
-    tools=[
-        get_current_date_time,
-        get_flight_peak_hours,
-        get_train_peak_hours,
-        get_daily_city_weather,
-        get_events_from_viralagenda,
-    ],
-    output_key="initial_plan",
-)
 
 refiner_agent = Agent(
     name="driver_plan_refining_agent",
@@ -76,7 +33,7 @@ refiner_agent = Agent(
         3. After calculating all necessary driving times, analyze the flow. **If a transition appears inefficient (e.g., excessively long, or causes the driver to miss the start of a profitable window), suggest a slight adjustment to the departure time or re-sequence of activities, if a more efficient alternative within the original strategic intent is possible.** Focus on keeping the driver in high-demand zones or moving efficiently between them.
         4. Integrate these calculated driving times and any minor adjustments into the plan.
 
-        Your output MUST be a JSON object representing the plan. This JSON should contain an array of daily events, each with the following properties:
+        Your output MUST be ONLY a JSON object representing the plan. This JSON should contain an array of daily events, each with the following properties:
         * `activity_name` (string, one of four types: "Transition", "Looking for rides", "Break", or "Personal Commitment". Use "Transition" for travel between distinct points, and "Looking for rides" for active driving periods within a general high-demand area.)
         * `start_time` (string, HH:MM format, local time)
         * `end_time` (string, HH:MM format, local time)
@@ -88,15 +45,55 @@ refiner_agent = Agent(
         * `is_personal_commitment` (boolean, true if this is a pre-existing personal appointment)
         * `is_transition` (boolean, true if this is a transition between two segments)
 
-        Here is the base plan to refine: {initial_plan}
         """
     ),
     tools=[get_driving_time_at_time_x],
 )
 
-root_agent = SequentialAgent(
-    name="driver_assistant_sequential_agent",
-    sub_agents=[data_collection_agent, refiner_agent],
-    description="Executes a sequence of data collection, plan building and refining.",
-    # The agents will run in the order provided
+
+root_agent = Agent(
+    name="driver_planner_agent",
+    model="gemini-2.0-flash",
+    description=(
+        "Agent to plan the daily schedule of a ride sharing driver based on trains, flights, traffic and other personal info."
+    ),
+    instruction=(
+        f"""
+        You are a helpful agent expert at planning daily schedules for ride-sharing drivers. Your goal is to create an initial, strategically sound daily plan that maximizes earning potential by prioritizing high-demand periods and locations, and clustering activities geographically to minimize unproductive travel.
+
+        You will receive preferences and details from the user regarding how they want to plan their day. Based on these, you will leverage your tools to identify prime opportunities and structure a logical flow for the day.
+
+        The initial preferences will come JSON format, with the following fields:
+    
+        * `date`: the date to be considered for the plan (YYYY-MM-DD),
+        * `starTime`: the time to start the plan (HH:MM),
+        * `endTime`: the time to end the plan (HH:MM),
+        * `sources`: an object containing the data sources to use for the plan in boolean format (e.g., "trains", "flights", "events"),
+        * `user`: an object containing the user details, including their city 
+
+        You have at your disposal several tools which you can use to fulfill the user's requests and planning:
+
+        1. Tool to identify **peak hours** at the city train station, indicating times of high passenger demand.
+        2. Tool to identify **peak hours** at the city airport, indicating times of high passenger demand.
+        3. Tool to get the **daily weather** for a given city (for general awareness).
+        4. Tool to get the **current date and time in UTC**. You must use this tool when time-based or date-based calculations (e.g., "X hours from now" or "Today") are implied by the user's request.
+        5. Tool to get **relevant events** for a given city for a given date. Prioritize only those events that are likely to move large crowds and generate significant ride-sharing demand, such as concerts, large sporting events, or major festivals at large venues. Avoid smaller, niche gatherings.
+        6. An expert agent as a tool to **refine the plan** based on driving times, ensuring efficient transitions between proposed locations. You will pass it your initial plan.
+        
+        You will only and strictly output to the user the output of the refiner agent, which will be a JSON object representing the plan.
+        
+        You can only provide plans for the following cities: {', '.join(SUPPORTED_CITIES)}.
+
+        After you have provided a first refined plan to the user, he might ask for clarifications or modifications.
+        """
+    ),
+    tools=[
+        get_current_date_time,
+        get_flight_peak_hours,
+        get_train_peak_hours,
+        get_daily_city_weather,
+        get_events_from_viralagenda,
+        AgentTool(agent=refiner_agent),
+    ],
+    output_key="initial_plan",
 )
