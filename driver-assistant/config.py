@@ -1,8 +1,5 @@
 """Configuration settings for the ride sharing driver planner agent."""
 
-# Google Maps API Key
-MAPS_API_KEY = ""
-
 # City mappings
 AIRPORT_CODE_MAPPING = {
     "Porto": "OPO",

@@ -7,8 +7,13 @@ from google.type import latlng_pb2
 from typing import Optional
 from google.adk.agents import Agent
 from ..config import SUPPORTED_CITIES
-from ..config import MAPS_API_KEY
 from ..utils.geocoding import geocode_address
+
+import logging
+import os
+
+# Use a module-level logger consistent with agent.py
+logger = logging.getLogger("driver-assistant.tools.routing")
 
 
 def get_driving_time_at_time_x(
@@ -27,16 +32,16 @@ def get_driving_time_at_time_x(
         The driving duration in minutes, or None if an error occurs.
     """
     # Convert departure_time string to a datetime object (assume ISO format)
-    print("converting departure_time to datetime object")
+    logger.info("Converting departure_time to datetime object")
     try:
         departure_time = datetime.datetime.fromisoformat(departure_time)
     except Exception as e:
-        print(f"[Time Parsing Error] Could not parse departure_time: {e}")
+        logger.error(f"[Time Parsing Error] Could not parse departure_time: {e}")
         return None
 
-    print("Getting geocoding for origin and destination:")
-    print(f"Origin: {origin}")
-    print(f"Destination: {destination}")
+    logger.info("Getting geocoding for origin and destination:")
+    logger.info(f"Origin: {origin}")
+    logger.info(f"Destination: {destination}")
     # Convert origin and destination to latitude and longitude
     try:
         origin_data = geocode_address(origin)
@@ -48,11 +53,13 @@ def get_driving_time_at_time_x(
         destination_lng = destination_data["lng"]
 
     except Exception as e:
-        print(f"[Geocoding Error] Could not geocode addresses: {e}")
+        logger.error(f"[Geocoding Error] Could not geocode addresses: {e}")
         return None
 
     try:
-        client = routing_v2.RoutesClient(client_options={"api_key": MAPS_API_KEY})
+        client = routing_v2.RoutesClient(
+            client_options={"api_key": os.getenv("MAPS_API_KEY")}
+        )
 
         timestamp = timestamp_pb2.Timestamp()
         # The Routes API expects departure_time in UTC.
@@ -61,7 +68,7 @@ def get_driving_time_at_time_x(
         if departure_time.tzinfo is None or departure_time.tzinfo.utcoffset(
             departure_time
         ) != datetime.timedelta(0):
-            print("[Routes API] Warning: Departure time not in UTC. Converting to UTC.")
+            logger.warning("[Routes API] Departure time not in UTC. Converting to UTC.")
             departure_time = departure_time.astimezone(datetime.timezone.utc)
 
         timestamp.FromDatetime(departure_time)
@@ -92,20 +99,20 @@ def get_driving_time_at_time_x(
         metadata = [("x-goog-fieldmask", field_mask_str)]
 
         response = client.compute_routes(request=request, metadata=metadata)
-        print(response)
+        logger.info(f"Routes API response: {response}")
 
         if response.routes:
             route = response.routes[0]
             duration_seconds = route.duration.seconds
             duration_text = route.localized_values.duration.text
-            print(
-                f"\n[Routes API] Driving time: {duration_text} ({duration_seconds} seconds)"
+            logger.info(
+                f"[Routes API] Driving time: {duration_text} ({duration_seconds} seconds)"
             )
             return duration_seconds / 60
         else:
-            print("[Routes API] No routes found.")
+            logger.warning("[Routes API] No routes found.")
             return None
 
     except Exception as e:
-        print(f"[Routes API] An error occurred: {e}")
+        logger.error(f"[Routes API] An error occurred: {e}")
         return None

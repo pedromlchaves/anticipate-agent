@@ -9,13 +9,18 @@ from .tools.routing import get_driving_time_at_time_x
 from .tools.transportation import get_flight_peak_hours, get_train_peak_hours
 from .tools.weather import get_daily_city_weather
 from .tools.events import get_events_from_viralagenda
-from .tools.db_tools import agent_save_data, agent_load_data
 from .config import SUPPORTED_CITIES
 import os
 
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
+
 refiner_agent = Agent(
     name="driver_plan_refining_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description=("Agent to refine a driving plan based on driving times."),
     instruction=(
         """
@@ -24,15 +29,14 @@ refiner_agent = Agent(
         You will receive an initial plan from the main agent. Your task is to:
         1. Identify all critical transitions between proposed locations and time blocks within the plan.
         2. For each identified transition, you have to calculate the precise driving time using the `get_driving_time_at_time_x` tool. This requires you to know the origin and destination of each transition and the departure time.
-
-        *Rules for using the `get_driving_time_at_time_x` tool*:
-        * The departure time must be in UTC and formatted as an ISO string (e.g., "2023-10-01T12:00:00Z"). It *must* always be in the future relative to the current time.
-        * The tool will return the driving time in minutes.
-        * Always append the city name and country to the origin and destination addresses when using the tool (e.g., "Rua de Santa Catarina, Porto, Portugal"), to ensure accurate geocoding.
-
         3. After calculating all necessary driving times, analyze the flow. **If a transition appears inefficient (e.g., excessively long, or causes the driver to miss the start of a profitable window), suggest a slight adjustment to the departure time or re-sequence of activities, if a more efficient alternative within the original strategic intent is possible.** Focus on keeping the driver in high-demand zones or moving efficiently between them.
         4. Integrate these calculated driving times and any minor adjustments into the plan.
 
+        *Rules for using the `get_driving_time_at_time_x` tool*:
+        * You must convert the departure time to UTC and format it as an ISO string (e.g., "2023-10-01T12:00:00Z").
+        * Always append the city name and country to the origin and destination addresses when using the tool (e.g., "Rua de Santa Catarina, Porto, Portugal"), to ensure accurate geocoding.
+        * The tool will return the driving time in minutes.
+        
         Your output MUST be ONLY a JSON object representing the plan. This JSON should contain an array of daily events, each with the following properties:
         * `activity_name` (string, one of four types: "Transition", "Looking for rides", "Break", or "Personal Commitment". Use "Transition" for travel between distinct points, and "Looking for rides" for active driving periods within a general high-demand area.)
         * `start_time` (string, HH:MM format, local time)
@@ -45,6 +49,7 @@ refiner_agent = Agent(
         * `is_personal_commitment` (boolean, true if this is a pre-existing personal appointment)
         * `is_transition` (boolean, true if this is a transition between two segments)
 
+        Remember, you HAVE to use the `get_driving_time_at_time_x` tool. If you do not or cannot, be explicit about it and explain it.
         """
     ),
     tools=[get_driving_time_at_time_x],
@@ -53,7 +58,7 @@ refiner_agent = Agent(
 
 root_agent = Agent(
     name="driver_planner_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description=(
         "Agent to plan the daily schedule of a ride sharing driver based on trains, flights, traffic and other personal info."
     ),
@@ -66,8 +71,9 @@ root_agent = Agent(
         The initial preferences will come JSON format, with the following fields:
     
         * `date`: the date to be considered for the plan (YYYY-MM-DD),
-        * `starTime`: the time to start the plan (HH:MM),
+        * `startTime`: the time to start the plan (HH:MM),
         * `endTime`: the time to end the plan (HH:MM),
+        * `startLocation`: the starting location of the plan (e.g., "Rua de Santa Catarina, Porto, Portugal"),
         * `sources`: an object containing the data sources to use for the plan in boolean format (e.g., "trains", "flights", "events"),
         * `customInstructions`: an object containing any specific instructions or preferences for the plan to be considered for refinement (e.g., "Dentist appointment at 10:00 AM"),
         * `user`: an object containing the user details, including their city
@@ -79,13 +85,11 @@ root_agent = Agent(
         3. Tool to get the **daily weather** for a given city (for general awareness).
         4. Tool to get the **current date and time in UTC**. You must use this tool when time-based or date-based calculations (e.g., "X hours from now" or "Today") are implied by the user's request.
         5. Tool to get **relevant events** for a given city for a given date. Prioritize only those events that are likely to move large crowds and generate significant ride-sharing demand, such as concerts, large sporting events, or major festivals at large venues. Avoid smaller, niche gatherings.
-        6. An expert agent as a tool to **refine the plan** based on driving times, ensuring efficient transitions between proposed locations. You will pass it your initial plan.
+        6. An expert agent as a tool to **refine the plan** based on driving times, ensuring efficient transitions between proposed locations. You will pass it your initial plan, remember that the refiner agent will require specificity regarding locations, names and starting times, it will only focus on optimizing transitions.
         
-        You will only and strictly output to the user the output of the refiner agent, which will be a JSON object representing the plan.
+        After you gather the JSON output of the refiner agent, which will be a JSON object representing the plan, present it to the user directly without any additional commentary or explanation. The user will then be able to ask for clarifications or modifications.
         
         You can only provide plans for the following cities: {', '.join(SUPPORTED_CITIES)}.
-
-        After you have provided a first refined plan to the user, he might ask for clarifications or modifications.
         """
     ),
     tools=[
@@ -94,7 +98,6 @@ root_agent = Agent(
         get_train_peak_hours,
         get_daily_city_weather,
         get_events_from_viralagenda,
-        AgentTool(agent=refiner_agent, skip_summarization=True),
+        AgentTool(agent=refiner_agent),
     ],
-    output_key="initial_plan",
 )

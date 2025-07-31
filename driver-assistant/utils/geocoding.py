@@ -2,7 +2,7 @@
 
 import requests
 from typing import Dict, Any
-from ..config import MAPS_API_KEY  # Ensure you have a config file with your API key
+import os
 
 
 def geocode_address(address: str) -> Dict[str, Any]:
@@ -18,7 +18,7 @@ def geocode_address(address: str) -> Dict[str, Any]:
     """
     # IMPORTANT: Replace 'YOUR_GOOGLE_API_KEY' with your actual Google Cloud API key
     # Ensure the Geocoding API is enabled for your project.
-    API_KEY = MAPS_API_KEY
+    API_KEY = os.getenv("MAPS_API_KEY")
     BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 
     params = {

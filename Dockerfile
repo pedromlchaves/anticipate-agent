@@ -59,8 +59,12 @@ RUN adduser --disabled-password --gecos "" myuser && \
 
 COPY . .
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 USER myuser
 
 ENV PATH="/home/myuser/.local/bin:$PATH"
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "main.py"]

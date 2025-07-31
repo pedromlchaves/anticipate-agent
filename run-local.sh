@@ -9,20 +9,29 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}🚀 Starting local development setup...${NC}"
 
-# Step 0: Check required environment variables and prompt if missing
-REQUIRED_VARS=(MAPS_API_KEY)
-echo -e "${YELLOW}🔎 Checking required environment variables...${NC}"
-for VAR in "${REQUIRED_VARS[@]}"; do
-  if [ -z "${!VAR}" ]; then
-    echo -e "${YELLOW}⚠️  $VAR is not set.${NC}"
-    read -p "Enter value for $VAR: " $VAR
-    export $VAR
-    echo -e "${GREEN}✅ $VAR set.${NC}"
-  else
-    echo -e "${GREEN}✅ $VAR is set.${NC}"
-  fi
-done
-echo -e "${GREEN}✅ All required environment variables are set.${NC}"
+
+
+# Step 0: Parse .env and prepare environment variables for Docker
+ENV_FILE="driver-assistant/.env"
+DOCKER_ENV_ARGS=""
+if [ -f "$ENV_FILE" ]; then
+  echo -e "${YELLOW}🔎 Parsing .env file for environment variables...${NC}"
+  while IFS='=' read -r key value; do
+    # Skip comments and empty lines
+    [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+    # Remove quotes and whitespace
+    key=$(echo "$key" | xargs)
+    value=$(echo "$value" | sed 's/^"//;s/"$//' | xargs)
+    if [ -n "$key" ] && [ -n "$value" ]; then
+      DOCKER_ENV_ARGS+=" -e $key=$value"
+      echo -e "${GREEN}✅ Loaded $key from .env${NC}"
+    fi
+  done < "$ENV_FILE"
+else
+  echo -e "${YELLOW}⚠️  .env file not found. No environment variables loaded from file.${NC}"
+fi
+
+echo -e "${GREEN}✅ Environment variables ready for Docker container.${NC}"
 
 # Step 1: Check if gcloud is installed
 if ! command -v gcloud &> /dev/null; then
@@ -69,13 +78,14 @@ docker rm $(docker ps -aq --filter ancestor=driver-assistant-local) 2>/dev/null 
 docker stop driver-assistant-local 2>/dev/null || true
 docker rm driver-assistant-local 2>/dev/null || true
 
-# Step 7: Run the container with mounted credentials
-echo -e "${GREEN}🚀 Starting Docker container with Google Cloud credentials...${NC}"
+# Step 7: Run the container with mounted credentials and env vars
+echo -e "${GREEN}🚀 Starting Docker container with Google Cloud credentials and environment variables...${NC}"
 docker run \
     --name driver-assistant-local \
     -p 8080:8080 \
     -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/application_default_credentials.json \
     -v ${ADC_PATH}:/tmp/keys/application_default_credentials.json:ro \
+    $DOCKER_ENV_ARGS \
   driver-assistant-local
 
 # Step 8: Wait for container to start and check health
