@@ -6,7 +6,23 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+
 echo -e "${GREEN}🚀 Starting local development setup...${NC}"
+
+# Step 0: Check required environment variables and prompt if missing
+REQUIRED_VARS=(MAPS_API_KEY)
+echo -e "${YELLOW}🔎 Checking required environment variables...${NC}"
+for VAR in "${REQUIRED_VARS[@]}"; do
+  if [ -z "${!VAR}" ]; then
+    echo -e "${YELLOW}⚠️  $VAR is not set.${NC}"
+    read -p "Enter value for $VAR: " $VAR
+    export $VAR
+    echo -e "${GREEN}✅ $VAR set.${NC}"
+  else
+    echo -e "${GREEN}✅ $VAR is set.${NC}"
+  fi
+done
+echo -e "${GREEN}✅ All required environment variables are set.${NC}"
 
 # Step 1: Check if gcloud is installed
 if ! command -v gcloud &> /dev/null; then

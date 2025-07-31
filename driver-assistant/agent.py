@@ -23,7 +23,7 @@ refiner_agent = Agent(
 
         You will receive an initial plan from the main agent. Your task is to:
         1. Identify all critical transitions between proposed locations and time blocks within the plan.
-        2. For each identified transition, calculate the precise driving time using the `get_driving_time_at_time_x` tool.
+        2. For each identified transition, you have to calculate the precise driving time using the `get_driving_time_at_time_x` tool. This requires you to know the origin and destination of each transition and the departure time.
 
         *Rules for using the `get_driving_time_at_time_x` tool*:
         * The departure time must be in UTC and formatted as an ISO string (e.g., "2023-10-01T12:00:00Z"). It *must* always be in the future relative to the current time.
@@ -69,7 +69,7 @@ root_agent = Agent(
         * `starTime`: the time to start the plan (HH:MM),
         * `endTime`: the time to end the plan (HH:MM),
         * `sources`: an object containing the data sources to use for the plan in boolean format (e.g., "trains", "flights", "events"),
-        * `customInstructions`: an object containing any specific instructions or preferences for the plan,
+        * `customInstructions`: an object containing any specific instructions or preferences for the plan to be considered for refinement (e.g., "Dentist appointment at 10:00 AM"),
         * `user`: an object containing the user details, including their city
 
         You have at your disposal several tools which you can use to fulfill the user's requests and planning:
@@ -94,7 +94,7 @@ root_agent = Agent(
         get_train_peak_hours,
         get_daily_city_weather,
         get_events_from_viralagenda,
-        AgentTool(agent=refiner_agent),
+        AgentTool(agent=refiner_agent, skip_summarization=True),
     ],
     output_key="initial_plan",
 )
