@@ -10,3 +10,4 @@ grpcio
 grpcio-tools
 protobuf
 deprecated
+langfuse

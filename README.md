@@ -58,7 +58,10 @@ docker logs -f driver-assistant-local
   - `GOOGLE_CLOUD_LOCATION`: Deployment region (e.g., `us-central1`)
   - `GOOGLE_GENAI_USE_VERTEXAI`: Set if using Vertex AI
   - `MAPS_API_KEY`: Your Google Maps API key
-
+  - `LANGFUSE_HOST`: The Langfuse host used for tracing
+  - `LANGFUSE_SECRET_KEY`: Langfuse Secret Key
+  - `LANGFUSE_PUBLIC_KEY`: Langfuse Public Key
+     
 #### Deploy
 Use the provided script:
 
@@ -78,6 +81,7 @@ This will:
 - `Dockerfile`: Container build instructions
 - `run-local.sh`: Local development script
 - `deploy.sh`: Cloud Run deployment script
+- `entrypoint.sh`: Environment checker
 
 ## Dependencies
 See `requirements.txt` for all Python packages used, including:

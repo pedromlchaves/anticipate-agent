@@ -11,12 +11,33 @@ from .tools.weather import get_daily_city_weather
 from .tools.events import get_events_from_viralagenda
 from .config import SUPPORTED_CITIES
 import os
-
+import base64
 import logging
+from langfuse import get_client
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
+
+
+# Build Basic Auth header.
+LANGFUSE_AUTH = base64.b64encode(
+    f"{os.environ.get('LANGFUSE_PUBLIC_KEY')}:{os.environ.get('LANGFUSE_SECRET_KEY')}".encode()
+).decode()
+
+# Configure OpenTelemetry endpoint & headers
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = (
+    os.environ.get("LANGFUSE_HOST") + "/api/public/otel"
+)
+os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {LANGFUSE_AUTH}"
+
+langfuse = get_client()
+
+# Verify connection
+if langfuse.auth_check():
+    logging.info("Langfuse client is authenticated and ready!")
+else:
+    logging.error("Authentication failed. Please check your credentials and host.")
 
 refiner_agent = Agent(
     name="driver_plan_refining_agent",

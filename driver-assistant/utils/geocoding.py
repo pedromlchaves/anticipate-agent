@@ -38,9 +38,6 @@ def geocode_address(address: str) -> Dict[str, Any]:
             lat = location["lat"]
             lng = location["lng"]
 
-            print(f"Formatted Address: {formatted_address}")
-            print(f"Latitude: {lat}, Longitude: {lng}")
-
             return {
                 "address": formatted_address,
                 "lat": lat,
