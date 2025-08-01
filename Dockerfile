@@ -54,10 +54,14 @@ RUN apt-get update --fix-missing && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY . .
+
 RUN adduser --disabled-password --gecos "" myuser && \
+    mkdir -p /app/driver-assistant/data/events_cache && \
+    chown -R myuser:myuser /app/driver-assistant/data/events_cache && \
     chown -R myuser:myuser /app
 
-COPY . .
+
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
