@@ -6,7 +6,8 @@ from google.adk.tools.agent_tool import AgentTool
 # Import all tools
 from .tools.datetime_utils import get_current_date_time
 from .tools.routing import get_driving_time_at_time_x
-from .tools.transportation import get_flight_peak_hours, get_train_peak_hours
+from .tools.flights import get_flight_peak_hours
+from .tools.trains import get_train_peak_hours
 from .tools.weather import get_daily_city_weather
 from .tools.events import get_events_from_viralagenda
 from .config import SUPPORTED_CITIES
@@ -101,7 +102,7 @@ root_agent = Agent(
 
         You have at your disposal several tools which you can use to fulfill the user's requests and planning:
 
-        1. Tool to identify **peak hours** at the city train station, indicating times of high passenger demand.
+        1. Tool to identify **peak hours** at the city train stations, indicating times of high passenger demand.
         2. Tool to identify **peak hours** at the city airport, indicating times of high passenger demand.
         3. Tool to get the **daily weather** for a given city (for general awareness).
         4. Tool to get the **current date and time in UTC**. You must use this tool when time-based or date-based calculations (e.g., "X hours from now" or "Today") are implied by the user's request.

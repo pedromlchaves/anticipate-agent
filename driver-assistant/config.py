@@ -7,11 +7,34 @@ AIRPORT_CODE_MAPPING = {
     "Lisbon": "LIS",
 }
 
+CITY_CODE_MAPPING = {"Porto": "1131200"}
+
+# Train station mappings
 STATION_CODE_MAPPING = {
-    "Porto": "94-2006",
+    "Porto": "94-50100",  # Porto Campanhã
 }
 
-CITY_CODE_MAPPING = {"Porto": "1131200"}
+# London train stations for peak hours analysis
+LONDON_STATIONS = {
+    "LST": "London Liverpool Street",
+    "PAD": "London Paddington",
+    "WAT": "London Waterloo",
+    "VIC": "London Victoria",
+    "LBG": "London Bridge",
+    "EUS": "London Euston",
+    "KGX": "London King's Cross",
+    "CHX": "London Charing Cross",
+}
+
+# Porto train stations for peak hours analysis
+PORTO_STATIONS = {
+    "94-50100": "Porto Campanhã",  # Existing code from CP
+    "94-1008": "Porto São Bento",  # Real CP code (updated from mock)
+}
+
+# API Base URLs
+TRANSPORT_API_BASE_URL = "https://transportapi.com/v3/uk/train/station"
+CP_API_BASE_URL = "https://www.cp.pt/sites/spring/station/trains"
 
 # Supported cities
 SUPPORTED_CITIES = ["Porto"]
