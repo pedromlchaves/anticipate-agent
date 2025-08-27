@@ -146,7 +146,7 @@ def get_porto_train_peak_hours() -> Dict[str, Any]:
             # Use CP API for Portuguese stations
             response = requests.get(f"{CP_API_BASE_URL}?stationId={station_code}")
             response.raise_for_status()
-
+            print(f"Response for {station_name}: {response.status_code}")
             df = pd.DataFrame(response.json())
 
             if df.empty:
@@ -161,14 +161,34 @@ def get_porto_train_peak_hours() -> Dict[str, Any]:
                 continue
 
             # Convert arrivalTime to datetime and group by hour
-            df["arrivalTime"] = pd.to_datetime(df["arrivalTime"])
+            df["arrivalTime"] = pd.to_datetime(df["arrivalTime"], errors="coerce")
+
+            # Remove rows with invalid datetime (NaT values)
+            df = df.dropna(subset=["arrivalTime"])
+
+            if df.empty:
+                results["stations"][station_code] = {
+                    "status": "success",
+                    "station_name": station_name,
+                    "peak_hours": [],
+                    "total_trains": 0,
+                    "message": f"No valid arrival times for {station_name}",
+                }
+                results["summary"]["successful_stations"] += 1
+                continue
+
             hourly_counts = df.groupby(df["arrivalTime"].dt.hour).size()
 
             # Create a more readable format
             hourly_counts_df = hourly_counts.reset_index()
             hourly_counts_df.columns = ["Hour", "Train_Count"]
-            hourly_counts_df["Hour"] = hourly_counts_df["Hour"].apply(
-                lambda x: f"{x:02d}:00"
+
+            # Fix the hour formatting by ensuring integers and handling any NaN values
+            hourly_counts_df["Hour"] = (
+                hourly_counts_df["Hour"]
+                .fillna(0)
+                .astype(int)
+                .apply(lambda x: f"{x:02d}:00")
             )
 
             # Sort by train count to get peak hours

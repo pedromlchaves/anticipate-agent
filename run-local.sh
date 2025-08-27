@@ -19,9 +19,9 @@ if [ -f "$ENV_FILE" ]; then
   while IFS='=' read -r key value; do
     # Skip comments and empty lines
     [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
-    # Remove quotes and whitespace
-    key=$(echo "$key" | xargs)
-    value=$(echo "$value" | sed 's/^"//;s/"$//' | xargs)
+    # Remove quotes and whitespace, and strip newlines
+    key=$(echo "$key" | xargs | tr -d '\n\r')
+    value=$(echo "$value" | sed 's/^"//;s/"$//' | xargs | tr -d '\n\r')
     if [ -n "$key" ] && [ -n "$value" ]; then
       DOCKER_ENV_ARGS+=" -e $key=$value"
       echo -e "${GREEN}✅ Loaded $key from .env${NC}"
