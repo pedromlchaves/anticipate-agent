@@ -53,6 +53,7 @@ refiner_agent = Agent(
         2. For each identified transition, you have to calculate the precise driving time using the `get_driving_time_at_time_x` tool. This requires you to know the origin and destination of each transition and the departure time.
         3. After calculating all necessary driving times, analyze the flow. **If a transition appears inefficient (e.g., excessively long, or causes the driver to miss the start of a profitable window), suggest a slight adjustment to the departure time or re-sequence of activities, if a more efficient alternative within the original strategic intent is possible.** Focus on keeping the driver in high-demand zones or moving efficiently between them.
         4. Integrate these calculated driving times and any minor adjustments into the plan.
+        5. Make sure that the recommended transitions make sense from a driving perspective (do not include or optimize long transition times)
 
         *Rules for using the `get_driving_time_at_time_x` tool*:
         * You must convert the departure time to UTC and format it as an ISO string (e.g., "2023-10-01T12:00:00Z").
