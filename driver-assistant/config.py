@@ -12,8 +12,6 @@ def get_env_var(key: str, default: str = "") -> str:
 # City mappings
 AIRPORT_CODE_MAPPING = {
     "Porto": "OPO",
-    "Braga": "OPO",
-    "Lisbon": "LIS",
 }
 
 CITY_CODE_MAPPING = {"Porto": "1131200"}

@@ -1,4 +1,5 @@
 driver-assistant/.env
+driver-assistant/data/tool_cache/*
 *.env
 __pycache__/
 **/__pycache__
