@@ -1,0 +1,7 @@
+{
+  "data": {
+    "status": "success",
+    "peak_hours": "[{'Hour': '16:00', 'Count': 8}, {'Hour': '17:00', 'Count': 10}, {'Hour': '18:00', 'Count': 8}, {'Hour': '19:00', 'Count': 10}, {'Hour': '20:00', 'Count': 2}, {'Hour': '21:00', 'Count': 9}, {'Hour': '22:00', 'Count': 13}, {'Hour': '23:00', 'Count': 10}]"
+  },
+  "date": "2025-08-27"
+}

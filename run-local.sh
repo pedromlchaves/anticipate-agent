@@ -80,11 +80,16 @@ docker rm driver-assistant-local 2>/dev/null || true
 
 # Step 7: Run the container with mounted credentials and env vars
 echo -e "${GREEN}🚀 Starting Docker container with Google Cloud credentials and environment variables...${NC}"
+
+# Create cache directory on host if it doesn't exist
+mkdir -p ./driver-assistant/data/tool_cache
+
 docker run \
     --name driver-assistant-local \
     -p 8080:8080 \
     -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/application_default_credentials.json \
     -v ${ADC_PATH}:/tmp/keys/application_default_credentials.json:ro \
+    -v $(pwd)/driver-assistant/data/tool_cache:/app/driver-assistant/data/tool_cache \
     $DOCKER_ENV_ARGS \
   driver-assistant-local
 

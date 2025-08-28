@@ -44,7 +44,6 @@ CP_API_BASE_URL = "https://www.cp.pt/sites/spring/station/trains"
 SUPPORTED_CITIES = ["Porto", "London"]
 
 # Cache settings
-EVENTS_CACHE_DIR = "driver-assistant/data/events_cache"
 TOOL_CACHE_DIR = "driver-assistant/data/tool_cache"
 
 # Selenium settings

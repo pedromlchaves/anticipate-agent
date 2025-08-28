@@ -1,0 +1,154 @@
+{
+  "data": {
+    "status": "success",
+    "city": "London",
+    "stations": {
+      "LST": {
+        "status": "success",
+        "station_name": "London Liverpool Street",
+        "peak_hours": [
+          {
+            "Hour": "10:00",
+            "Train_Count": 36
+          },
+          {
+            "Hour": "09:00",
+            "Train_Count": 14
+          }
+        ],
+        "total_trains": 50
+      },
+      "PAD": {
+        "status": "success",
+        "station_name": "London Paddington",
+        "peak_hours": [
+          {
+            "Hour": "10:00",
+            "Train_Count": 41
+          },
+          {
+            "Hour": "09:00",
+            "Train_Count": 9
+          }
+        ],
+        "total_trains": 50
+      },
+      "WAT": {
+        "status": "success",
+        "station_name": "London Waterloo",
+        "peak_hours": [
+          {
+            "Hour": "10:00",
+            "Train_Count": 29
+          },
+          {
+            "Hour": "11:00",
+            "Train_Count": 15
+          },
+          {
+            "Hour": "09:00",
+            "Train_Count": 6
+          }
+        ],
+        "total_trains": 50
+      },
+      "VIC": {
+        "status": "success",
+        "station_name": "London Victoria",
+        "peak_hours": [
+          {
+            "Hour": "10:00",
+            "Train_Count": 32
+          },
+          {
+            "Hour": "11:00",
+            "Train_Count": 11
+          },
+          {
+            "Hour": "09:00",
+            "Train_Count": 7
+          }
+        ],
+        "total_trains": 50
+      },
+      "LBG": {
+        "status": "success",
+        "station_name": "London Bridge",
+        "peak_hours": [
+          {
+            "Hour": "10:00",
+            "Train_Count": 31
+          },
+          {
+            "Hour": "09:00",
+            "Train_Count": 19
+          }
+        ],
+        "total_trains": 50
+      },
+      "EUS": {
+        "status": "success",
+        "station_name": "London Euston",
+        "peak_hours": [
+          {
+            "Hour": "10:00",
+            "Train_Count": 21
+          },
+          {
+            "Hour": "11:00",
+            "Train_Count": 17
+          },
+          {
+            "Hour": "09:00",
+            "Train_Count": 4
+          }
+        ],
+        "total_trains": 42
+      },
+      "KGX": {
+        "status": "success",
+        "station_name": "London King's Cross",
+        "peak_hours": [
+          {
+            "Hour": "10:00",
+            "Train_Count": 12
+          },
+          {
+            "Hour": "11:00",
+            "Train_Count": 9
+          },
+          {
+            "Hour": "09:00",
+            "Train_Count": 3
+          }
+        ],
+        "total_trains": 24
+      },
+      "CHX": {
+        "status": "success",
+        "station_name": "London Charing Cross",
+        "peak_hours": [
+          {
+            "Hour": "10:00",
+            "Train_Count": 20
+          },
+          {
+            "Hour": "11:00",
+            "Train_Count": 13
+          },
+          {
+            "Hour": "09:00",
+            "Train_Count": 4
+          }
+        ],
+        "total_trains": 37
+      }
+    },
+    "summary": {
+      "total_stations": 8,
+      "successful_stations": 8,
+      "failed_stations": 0
+    }
+  },
+  "date": "2025-08-28"
+}

@@ -57,8 +57,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 RUN adduser --disabled-password --gecos "" myuser && \
-    mkdir -p /app/driver-assistant/data/events_cache && \
-    chown -R myuser:myuser /app/driver-assistant/data/events_cache && \
+    mkdir -p /app/driver-assistant/data/tool_cache && \
+    chown -R myuser:myuser /app/driver-assistant/data && \
     chown -R myuser:myuser /app
 
 

@@ -1,0 +1,52 @@
+{
+  "data": {
+    "status": "success",
+    "city": "Porto",
+    "stations": {
+      "94-2006": {
+        "status": "success",
+        "station_name": "Porto Campanh\u00e3",
+        "peak_hours": [
+          {
+            "Hour": "18:00",
+            "Train_Count": 22
+          },
+          {
+            "Hour": "19:00",
+            "Train_Count": 22
+          },
+          {
+            "Hour": "20:00",
+            "Train_Count": 18
+          }
+        ],
+        "total_trains": 89
+      },
+      "94-1008": {
+        "status": "success",
+        "station_name": "Porto S\u00e3o Bento",
+        "peak_hours": [
+          {
+            "Hour": "19:00",
+            "Train_Count": 7
+          },
+          {
+            "Hour": "20:00",
+            "Train_Count": 7
+          },
+          {
+            "Hour": "18:00",
+            "Train_Count": 6
+          }
+        ],
+        "total_trains": 30
+      }
+    },
+    "summary": {
+      "total_stations": 2,
+      "successful_stations": 2,
+      "failed_stations": 0
+    }
+  },
+  "date": "2025-08-27"
+}

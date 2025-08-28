@@ -11,6 +11,7 @@ from ..config import (
     TRANSPORT_API_BASE_URL,
     CP_API_BASE_URL,
 )
+from ..utils.api_cache import get_cached_or_fetch
 
 TRANSPORT_API_ID = os.getenv("TRANSPORT_API_ID")
 TRANSPORT_API_KEY = os.getenv("TRANSPORT_API_KEY")
@@ -22,6 +23,12 @@ def get_london_train_peak_hours() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Dictionary containing peak hours for all London stations
     """
+    cache_key = "london_train_peak_hours"
+    return get_cached_or_fetch(cache_key, _fetch_london_train_peak_hours)
+
+
+def _fetch_london_train_peak_hours() -> Dict[str, Any]:
+    """Internal function to fetch London train peak hours (without caching)."""
     results = {
         "status": "success",
         "city": "London",
@@ -55,13 +62,14 @@ def get_london_train_peak_hours() -> Dict[str, Any]:
             arrivals = data.get("arrivals", {}).get("all", [])
 
             if not arrivals:
-                results["stations"][station_code] = {
+                station_result = {
                     "status": "success",
                     "station_name": station_name,
                     "peak_hours": [],
                     "total_trains": 0,
                     "message": f"No arrivals found for {station_name}",
                 }
+                results["stations"][station_code] = station_result
                 results["summary"]["successful_stations"] += 1
                 continue
 
@@ -69,11 +77,12 @@ def get_london_train_peak_hours() -> Dict[str, Any]:
             df_arrivals = pd.DataFrame(arrivals)
 
             if "aimed_arrival_time" not in df_arrivals.columns:
-                results["stations"][station_code] = {
+                station_result = {
                     "status": "error",
                     "station_name": station_name,
                     "error_message": "Arrival time data not available",
                 }
+                results["stations"][station_code] = station_result
                 results["summary"]["failed_stations"] += 1
                 continue
 
@@ -98,27 +107,30 @@ def get_london_train_peak_hours() -> Dict[str, Any]:
             peak_hours = hourly_counts_df.sort_values("Train_Count", ascending=False)
             top_3_peak_hours = peak_hours.head(3)
 
-            results["stations"][station_code] = {
+            station_result = {
                 "status": "success",
                 "station_name": station_name,
                 "peak_hours": top_3_peak_hours.to_dict(orient="records"),
                 "total_trains": len(arrivals),
             }
+            results["stations"][station_code] = station_result
             results["summary"]["successful_stations"] += 1
 
         except requests.exceptions.RequestException as e:
-            results["stations"][station_code] = {
+            station_result = {
                 "status": "error",
                 "station_name": station_name,
                 "error_message": f"API request failed: {str(e)}",
             }
+            results["stations"][station_code] = station_result
             results["summary"]["failed_stations"] += 1
         except Exception as e:
-            results["stations"][station_code] = {
+            station_result = {
                 "status": "error",
                 "station_name": station_name,
                 "error_message": f"Analysis failed: {str(e)}",
             }
+            results["stations"][station_code] = station_result
             results["summary"]["failed_stations"] += 1
 
     return results
@@ -130,6 +142,12 @@ def get_porto_train_peak_hours() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Dictionary containing peak hours for all Porto stations
     """
+    cache_key = "porto_train_peak_hours"
+    return get_cached_or_fetch(cache_key, _fetch_porto_train_peak_hours)
+
+
+def _fetch_porto_train_peak_hours() -> Dict[str, Any]:
+    """Internal function to fetch Porto train peak hours (without caching)."""
     results = {
         "status": "success",
         "city": "Porto",
@@ -150,13 +168,14 @@ def get_porto_train_peak_hours() -> Dict[str, Any]:
             df = pd.DataFrame(response.json())
 
             if df.empty:
-                results["stations"][station_code] = {
+                station_result = {
                     "status": "success",
                     "station_name": station_name,
                     "peak_hours": [],
                     "total_trains": 0,
                     "message": f"No train data available for {station_name}",
                 }
+                results["stations"][station_code] = station_result
                 results["summary"]["successful_stations"] += 1
                 continue
 
@@ -167,13 +186,14 @@ def get_porto_train_peak_hours() -> Dict[str, Any]:
             df = df.dropna(subset=["arrivalTime"])
 
             if df.empty:
-                results["stations"][station_code] = {
+                station_result = {
                     "status": "success",
                     "station_name": station_name,
                     "peak_hours": [],
                     "total_trains": 0,
                     "message": f"No valid arrival times for {station_name}",
                 }
+                results["stations"][station_code] = station_result
                 results["summary"]["successful_stations"] += 1
                 continue
 
@@ -195,20 +215,22 @@ def get_porto_train_peak_hours() -> Dict[str, Any]:
             peak_hours = hourly_counts_df.sort_values("Train_Count", ascending=False)
             top_3_peak_hours = peak_hours.head(3)
 
-            results["stations"][station_code] = {
+            station_result = {
                 "status": "success",
                 "station_name": station_name,
                 "peak_hours": top_3_peak_hours.to_dict(orient="records"),
                 "total_trains": len(df),
             }
+            results["stations"][station_code] = station_result
             results["summary"]["successful_stations"] += 1
 
         except Exception as e:
-            results["stations"][station_code] = {
+            station_result = {
                 "status": "error",
                 "station_name": station_name,
                 "error_message": f"Failed to get data: {str(e)}",
             }
+            results["stations"][station_code] = station_result
             results["summary"]["failed_stations"] += 1
 
     return results
@@ -346,4 +368,98 @@ def get_train_peak_hours(city: str) -> Dict[str, Any]:
             f"Please use one of the supported cities: {', '.join(supported_cities)}",
             "supported_cities": supported_cities,
             "requested_city": city,
+        }
+
+
+def clear_train_cache(city: str = None) -> Dict[str, Any]:
+    """Clear train data cache.
+
+    Args:
+        city (str, optional): Specific city cache to clear ('london' or 'porto').
+                             If None, clears all train cache.
+
+    Returns:
+        Dict[str, Any]: Status of cache clearing operation
+    """
+    try:
+        from ..utils.cache import DailyCache
+        import os
+        import glob
+
+        # Get the cache directory
+        cache_dir = DailyCache._get_cache_dir()
+
+        if city is None:
+            # Clear all train cache files
+            train_cache_files = glob.glob(os.path.join(cache_dir, "*train*"))
+            removed_count = 0
+            for cache_file in train_cache_files:
+                try:
+                    os.remove(cache_file)
+                    removed_count += 1
+                except Exception:
+                    pass
+
+            return {
+                "status": "success",
+                "message": f"All train cache cleared successfully ({removed_count} files removed)",
+                "removed_count": removed_count,
+            }
+
+        city_normalized = city.strip().lower()
+        if city_normalized in ["london", "porto"]:
+            # Clear specific city cache
+            cache_key = f"{city_normalized}_train_peak_hours"
+            cache = DailyCache()
+
+            # Try to remove the cache file
+            try:
+                cache_file_path = cache._get_cache_file_path(cache_key)
+                if os.path.exists(cache_file_path):
+                    os.remove(cache_file_path)
+                    message = (
+                        f"{city_normalized.title()} train cache cleared successfully"
+                    )
+                else:
+                    message = f"No {city_normalized} train cache found to clear"
+
+                return {
+                    "status": "success",
+                    "message": message,
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "error_message": f"Failed to clear {city_normalized} cache: {str(e)}",
+                }
+        else:
+            return {
+                "status": "error",
+                "error_message": f"City '{city}' is not supported. Use 'london' or 'porto'.",
+            }
+
+    except Exception as e:
+        return {"status": "error", "error_message": f"Failed to clear cache: {str(e)}"}
+
+
+def cleanup_old_train_cache() -> Dict[str, Any]:
+    """Clean up old train cache entries (not from today).
+
+    Returns:
+        Dict[str, Any]: Status and count of cleaned up entries
+    """
+    try:
+        from ..utils.cache import DailyCache
+
+        cache = DailyCache()
+        removed_count = cache.cleanup_old()
+        return {
+            "status": "success",
+            "message": f"Cleaned up {removed_count} old cache entries",
+            "removed_count": removed_count,
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error_message": f"Failed to cleanup cache: {str(e)}",
         }
