@@ -41,6 +41,9 @@ CP_API_BASE_URL = "https://www.cp.pt/sites/spring/station/trains"
 # Supported cities
 SUPPORTED_CITIES = ["Porto", "London"]
 
+# GTFS settings
+GTFS_DATA_DIR = get_env_var("GTFS_DATA_DIR", "gtfs_generic_eu")
+
 # Cache settings
 TOOL_CACHE_DIR = "driver-assistant/data/tool_cache"
 

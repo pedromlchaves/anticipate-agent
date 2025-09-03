@@ -8,6 +8,7 @@ from .tools.datetime_utils import get_current_date_time
 from .tools.routing import get_driving_time_at_time_x
 from .tools.flights import get_flight_peak_hours
 from .tools.trains import get_train_peak_hours
+from .tools.buses import get_bus_peak_hours
 from .tools.weather import get_daily_city_weather
 from .tools.events import get_events_from_viralagenda
 from .config import SUPPORTED_CITIES
@@ -105,11 +106,12 @@ root_agent = Agent(
 
         1. Tool to identify **peak hours** at the city train stations, indicating times of high passenger demand.
         2. Tool to identify **peak hours** at the city airport, indicating times of high passenger demand.
-        3. Tool to get the **daily weather** for a given city (for general awareness).
-        4. Tool to get the **current date and time in UTC**. You must use this tool when time-based or date-based calculations (e.g., "X hours from now" or "Today") are implied by the user's request.
-        5. Tool to get **relevant events** for a given city for a given date. Prioritize only those events that are likely to move large crowds and generate significant ride-sharing demand, such as concerts, large sporting events, or major festivals at large venues. Avoid smaller, niche gatherings.
-        6. An expert agent as a tool to **refine the plan** based on driving times, ensuring efficient transitions between proposed locations. You will pass it your initial plan, remember that the refiner agent will require specificity regarding locations, names and starting times, it will only focus on optimizing transitions.
-        
+        3. Tool to identify **peak hours** at the main bus stops, indicating times of high passenger demand.
+        4. Tool to get the **daily weather** for a given city (for general awareness).
+        5. Tool to get the **current date and time in UTC**. You must use this tool when time-based or date-based calculations (e.g., "X hours from now" or "Today") are implied by the user's request.
+        6. Tool to get **relevant events** for a given city for a given date. Prioritize only those events that are likely to move large crowds and generate significant ride-sharing demand, such as concerts, large sporting events, or major festivals at large venues. Avoid smaller, niche gatherings.
+        7. An expert agent as a tool to **refine the plan** based on driving times, ensuring efficient transitions between proposed locations. You will pass it your initial plan, remember that the refiner agent will require specificity regarding locations, names and starting times, it will only focus on optimizing transitions.
+
         After you gather the JSON output of the refiner agent, which will be a JSON object representing the plan, present it to the user directly without any additional commentary or explanation. The user will then be able to ask for clarifications or modifications.
         
         You can only provide plans for the following cities: {', '.join(SUPPORTED_CITIES)}.
@@ -119,6 +121,7 @@ root_agent = Agent(
         get_current_date_time,
         get_flight_peak_hours,
         get_train_peak_hours,
+        get_bus_peak_hours,
         get_daily_city_weather,
         get_events_from_viralagenda,
         AgentTool(agent=refiner_agent),
