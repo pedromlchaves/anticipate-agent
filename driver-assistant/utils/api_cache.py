@@ -22,6 +22,83 @@ except ImportError:
 api_cache = DailyCache(TOOL_CACHE_DIR)
 
 
+from google.adk.agents.invocation_context import InvocationContext
+
+
+def before_agent_cache(callback_context: InvocationContext):
+    """
+    Before agent cache callback to check for cached data.
+
+    Args:
+        callback_context (CallbackContext): The context for the callback.
+    """
+    pass
+
+
+def after_agent_cache(callback_context: InvocationContext):
+    """
+    After agent cache callback to store fetched data.
+
+    Args:
+        callback_context (CallbackContext): The context for the callback.
+    """
+    pass
+
+
+def get_cached(cache_key: str):
+    """
+    Get cached data if available.
+
+    Args:
+        cache_key: Unique key for caching this data
+
+    Returns:
+        Cached data if available, otherwise None
+    """
+    try:
+        if os.path.exists(api_cache.cache_dir):
+            cache_files = os.listdir(api_cache.cache_dir)
+            print(f"🔍 [CACHE DEBUG] Cache files found: {cache_files}")
+        else:
+            print("🔍 [CACHE DEBUG] Cache directory does not exist yet")
+    except Exception as e:
+        print(f"🔍 [CACHE DEBUG] Error listing cache directory: {e}")
+
+    # Try cache first
+    cached_data = api_cache.get(cache_key)
+    if cached_data is not None:
+        print(f"✅ [CACHE HIT] Found cached data for key: {cache_key}")
+    else:
+        print(f"❌ [CACHE MISS] No cached data found for key: {cache_key}")
+    return cached_data
+
+
+def set_cached(cache_key: str, data: any):
+    """
+    Set cached data.
+
+    Args:
+        cache_key: Unique key for caching this data
+        data: Data to cache
+    """
+    # Cache the result
+    print(f"💾 [CACHE SAVE] Saving data to cache with key: {cache_key}")
+    api_cache.set(cache_key, data)
+
+    # Verify the cache was written
+    try:
+        cache_file_path = api_cache._get_cache_file_path(cache_key)
+        print(f"💾 [CACHE SAVE] Cache file path: {cache_file_path}")
+        print(
+            f"💾 [CACHE SAVE] Cache file exists after write: {os.path.exists(cache_file_path)}"
+        )
+        if os.path.exists(cache_file_path):
+            file_size = os.path.getsize(cache_file_path)
+            print(f"💾 [CACHE SAVE] Cache file size: {file_size} bytes")
+    except Exception as e:
+        print(f"❌ [CACHE ERROR] Error verifying cache file: {e}")
+
+
 def get_cached_or_fetch(cache_key: str, fetch_function, *args, **kwargs):
     """
     Generic function to get cached data or fetch from API.
@@ -40,20 +117,9 @@ def get_cached_or_fetch(cache_key: str, fetch_function, *args, **kwargs):
         f"🔍 [CACHE DEBUG] Cache directory exists: {os.path.exists(api_cache.cache_dir)}"
     )
 
-    # List cache files for debugging
-    try:
-        if os.path.exists(api_cache.cache_dir):
-            cache_files = os.listdir(api_cache.cache_dir)
-            print(f"🔍 [CACHE DEBUG] Cache files found: {cache_files}")
-        else:
-            print("🔍 [CACHE DEBUG] Cache directory does not exist yet")
-    except Exception as e:
-        print(f"🔍 [CACHE DEBUG] Error listing cache directory: {e}")
+    cached_data = get_cached(cache_key)
 
-    # Try cache first
-    cached_data = api_cache.get(cache_key)
     if cached_data is not None:
-        print(f"✅ [CACHE HIT] Found cached data for key: {cache_key}")
         return cached_data
 
     print(f"❌ [CACHE MISS] No cached data found for key: {cache_key}")
@@ -62,22 +128,8 @@ def get_cached_or_fetch(cache_key: str, fetch_function, *args, **kwargs):
     # Cache miss - fetch fresh data
     fresh_data = fetch_function(*args, **kwargs)
 
-    # Cache the result
-    print(f"💾 [CACHE SAVE] Saving data to cache with key: {cache_key}")
-    api_cache.set(cache_key, fresh_data)
-
-    # Verify the cache was written
-    try:
-        cache_file_path = api_cache._get_cache_file_path(cache_key)
-        print(f"💾 [CACHE SAVE] Cache file path: {cache_file_path}")
-        print(
-            f"💾 [CACHE SAVE] Cache file exists after write: {os.path.exists(cache_file_path)}"
-        )
-        if os.path.exists(cache_file_path):
-            file_size = os.path.getsize(cache_file_path)
-            print(f"💾 [CACHE SAVE] Cache file size: {file_size} bytes")
-    except Exception as e:
-        print(f"❌ [CACHE ERROR] Error verifying cache file: {e}")
+    # Cache the fresh data
+    set_cached(cache_key, fresh_data)
 
     return fresh_data
 

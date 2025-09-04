@@ -50,7 +50,7 @@ fi
 
 # Step 3: Generate Application Default Credentials
 echo -e "${YELLOW}🔑 Setting up Application Default Credentials...${NC}"
-ADC_PATH="/Users/pedro.chaves/.config/gcloud/application_default_credentials.json"
+ADC_PATH="${HOME}/.config/gcloud/application_default_credentials.json"
 
 if [ ! -f "$ADC_PATH" ]; then
     echo -e "${YELLOW}📝 Creating Application Default Credentials...${NC}"

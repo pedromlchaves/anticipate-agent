@@ -2,13 +2,17 @@
 
 from typing import Dict
 
+from google.adk.agents import Agent
+from google.adk.tools.url_context_tool import url_context
+
+
 from ..config import SCROLL_PAUSE_TIME, MAX_SCROLLS
 from ..utils.web_scraping import (
     extract_events_from_html,
     get_headless_chrome_driver,
     scroll_and_load_content,
 )
-from ..utils.api_cache import get_cached_or_fetch
+from ..utils.api_cache import after_agent_cache, before_agent_cache, get_cached, get_cached_or_fetch, set_cached
 
 
 def get_events_from_viralagenda(city: str, date: str) -> Dict[str, any]:
@@ -59,7 +63,6 @@ def _fetch_events_from_viralagenda(city: str, date: str) -> Dict[str, any]:
         events = scroll_and_load_content(
             driver, extract_events_from_html, SCROLL_PAUSE_TIME, MAX_SCROLLS
         )
-
         driver.quit()
 
         return {"status": "success", "events": events, "count": len(events)}
@@ -69,6 +72,47 @@ def _fetch_events_from_viralagenda(city: str, date: str) -> Dict[str, any]:
             "status": "error",
             "error_message": f"Events information for '{city}' on '{date}' is not available. Error: {str(e)}",
         }
+
+
+def create_events_from_url_agent() -> Agent:
+    """
+    Creates a context agent for fetching events from a given url.
+    """
+    return Agent(
+        name="events_from_url_agent",
+        model="gemini-2.5-flash",
+        description="Agent to extract events from a given url",
+        instruction=(
+            """
+            You are an agent that fetches events from a given url.
+
+            Return a list of events found on the page as:
+
+            {
+                "status": "success",
+                "events": [
+                    {
+                        "name": "<event-name>",
+                        "start_date": "<start_date>",
+                        "end_date": "<end_date>",
+                        "start_time": "<start_time>",
+                        "end_time": "<end_time>",
+                        "location_name": "<location_name>",
+                        "location_address": "<location_address>",
+                        "url": "<event-url>",
+                        "categories": "<event-categories>"
+                    },
+                    ...
+                ],
+            }
+            """
+        ),
+        # before_agent_callback=before_agent_cache,  # check if cached
+        # after_agent_callback=after_agent_cache,  # cache response
+        tools=[
+            url_context,
+        ],
+    )
 
 
 def clear_events_cache(city: str = None, date: str = None) -> Dict[str, any]:
