@@ -18,6 +18,17 @@ def extract_events_from_html(html_content: str) -> List[Dict[str, Any]]:
 
     Returns:
         List[Dict[str, Any]]: A list of dictionaries, where each dictionary represents an event.
+        The following keys are included for each event:
+        - name (if available)
+        - start_date (if available)
+        - end_date (if available)
+        - start_time (if available)
+        - end_time (if available)
+        - location_name (if available)
+        - location_address (if available)
+        - url (if available)
+        - categories (list of categories, if available)
+        
     """
     soup = BeautifulSoup(html_content, "html.parser")
     events_data = []
